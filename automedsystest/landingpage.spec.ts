@@ -1,22 +1,37 @@
 import { test, expect } from "@playwright/test";
-import { LoginPage } from './pages';
+import { LoginPage, PatientChartPage} from './pages';
+import dotenv from 'dotenv';  // Correct import
+
+// Load environment variables from .env file
+dotenv.config();
 
 // login.test.ts
 
-test('Login Test', async ({ page }) => {
-  const loginPage = new LoginPage(page);
+test.describe('Login Test', () => {
+  let loginPage: LoginPage;
+  let patientchartPage: PatientChartPage;
 
-  // Navigate to the login page
-  await page.goto('https://qa-ehrpm.automedsys.net/');
+  test.beforeEach(async ({ page }) => {
+    loginPage = new LoginPage(page);
+    // Navigate to the login page before each test
+    await page.goto('https://qa-ehrpm.automedsys.net');
+  });
 
-  // Define credentials
-  const username = process.env.USERNAME || '';
-  const password = process.env.PASSWORD || '';
-  const practiceId = process.env.PRACTICE_ID || '';
+  test('Login and Verify URL', async ({ page }) => {
+    // Define credentials dynamically from environment variables 
+    const username = "deji+2@automedsys.com"
+    const password = 'P@rfect2';
+    const practiceId ='aal20201001';
 
-  // Call the login method with the correct parameters
-  await loginPage.login(username, password, practiceId);
-}); // <-- This closing brace was missing
+    // Perform login
+    patientchartPage = await loginPage.login(username, password, practiceId);
 
-  
-    
+    // Verify the current URL matches the expected URL
+    await page.waitForLoadState('load');
+    const actualUrl = page.url();
+    const expectedUrl = 'https://qa-ehrpm.automedsys.net/';
+    console.log(`Actual URL: ${actualUrl}`);
+    console.log(`Page Title: ${await page.title()}`);
+    expect(actualUrl).toBe(expectedUrl);
+  });
+});
