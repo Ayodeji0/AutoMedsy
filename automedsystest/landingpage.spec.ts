@@ -1,37 +1,25 @@
-import { test, expect } from "@playwright/test";
-import { LoginPage, PatientChartPage} from './pages';
-import dotenv from 'dotenv';  // Correct import
+import { test, expect } from '@playwright/test'; // Make sure the testing library is imported
+import { LoginPage } from './pages'; // 
+require('dotenv').config();
 
-// Load environment variables from .env file
-dotenv.config();
 
-// login.test.ts
+test('Login and validate dashboard', async ({ page }) => {
+  const loginPage = new LoginPage(page);
 
-test.describe('Login Test', () => {
-  let loginPage: LoginPage;
-  let patientchartPage: PatientChartPage;
+  // Navigate to the login page
+  const appUrl = process.env.APP_URL || 'https://qa-ehrpm.automedsys.net/';
+  await loginPage.navigateTo(appUrl);
 
-  test.beforeEach(async ({ page }) => {
-    loginPage = new LoginPage(page);
-    // Navigate to the login page before each test
-    await page.goto('https://qa-ehrpm.automedsys.net');
-  });
+  // Expect a title "to contain" a substring
+  await expect(page).toHaveTitle(/Practice Manager/);
 
-  test('Login and Verify URL', async ({ page }) => {
-    // Define credentials dynamically from environment variables 
-    const username = "deji+2@automedsys.com"
-    const password = 'P@rfect2';
-    const practiceId ='aal20201001';
+  // Perform login using environment variables
+  const username =  'deji+2@automedsys.com';
+  const password = process.env.PASSWORD || '';
+  const practiceId = process.env.PRACTICE_ID || '';
+  await loginPage.login(username, password, practiceId);
 
-    // Perform login
-    patientchartPage = await loginPage.login(username, password, practiceId);
-
-    // Verify the current URL matches the expected URL
-    await page.waitForLoadState('load');
-    const actualUrl = page.url();
-    const expectedUrl = 'https://qa-ehrpm.automedsys.net/';
-    console.log(`Actual URL: ${actualUrl}`);
-    console.log(`Page Title: ${await page.title()}`);
-    expect(actualUrl).toBe(expectedUrl);
-  });
+  // Assert successful login by checking for the dashboard URL and specific element
+  const dashboardUrl = process.env.DASHBOARD_URL || 'https://qa-ehrpm.automedsys.net/dashboard';
+  await expect(page).toHaveURL(dashboardUrl, { timeout: 10000 });
 });
